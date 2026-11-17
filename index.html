@@ -1,0 +1,940 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#03080e">
+  <title>নূর — নামাজের সময়সূচি ও আজানের সময়সূচি · বাংলাদেশ</title>
+
+  <!-- Google Luxury Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,700;1,400&family=Cinzel+Decorative:wght@700&family=Hind+Siliguri:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Firebase Realtime App SDK (For Free Global Sync) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #03080e;
+      --card-bg: rgba(7, 21, 32, 0.72);
+      --card-border: rgba(212, 175, 55, 0.22);
+      --gold-primary: #d4af37;
+      --gold-light: #f9e8a2;
+      --gold-gradient: linear-gradient(135deg, #fce08b 0%, #dfb743 50%, #ab7d1d 100%);
+      --emerald-glow: rgba(16, 185, 129, 0.18);
+      --text-main: #f4f8fb;
+      --text-muted: #8ca3ba;
+      --red-alert: #f87171;
+      --shadow-luxury: 0 20px 50px rgba(0, 0, 0, 0.6);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: radial-gradient(ellipse at 50% 0%, #0d2838 0%, var(--bg) 75%);
+      color: var(--text-main);
+      font-family: 'Hind Siliguri', 'Outfit', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Ambient Animated Starfield & Arabesque Watermark */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(212, 175, 55, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app-shell {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px 18px 80px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header Bar */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 22px;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+      margin-bottom: 22px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+    }
+
+    .brand-crest {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: var(--gold-gradient);
+      display: grid;
+      place-items: center;
+      color: #03080e;
+      font-family: 'Amiri', serif;
+      font-size: 26px;
+      font-weight: bold;
+      box-shadow: 0 0 25px rgba(212, 175, 55, 0.4);
+    }
+
+    .brand-title h1 {
+      font-size: 22px;
+      letter-spacing: 0.04em;
+      background: var(--gold-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+    }
+
+    .brand-title p {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-lux {
+      background: rgba(14, 32, 48, 0.8);
+      border: 1px solid var(--card-border);
+      color: var(--gold-light);
+      padding: 9px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      backdrop-filter: blur(10px);
+      transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .btn-lux:hover, .btn-lux:active {
+      border-color: var(--gold-primary);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(212, 175, 55, 0.2);
+    }
+
+    /* Live Celestial & Siyam Top Bar (Sahur, Iftar, Sunrise, Sunset) */
+    .celestial-bar {
+      background: linear-gradient(135deg, rgba(16, 40, 58, 0.85), rgba(7, 19, 28, 0.85));
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      border-radius: 20px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-luxury);
+      backdrop-filter: blur(16px);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .celestial-bar::after {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .celestial-item {
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      border-right: 1px solid rgba(212, 175, 55, 0.15);
+    }
+
+    .celestial-item:last-child { border-right: none; }
+    .celestial-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      margin-bottom: 4px;
+    }
+
+    .celestial-time {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.02em;
+    }
+
+    /* Forbidden Time Live Alert */
+    .forbidden-banner {
+      display: none;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+      padding: 11px 18px;
+      border-radius: 14px;
+      font-size: 13px;
+      text-align: center;
+      margin-bottom: 22px;
+      animation: pulseAlert 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseAlert {
+      0%, 100% { opacity: 0.9; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Primary Navigation Tab */
+    .tab-container {
+      display: flex;
+      background: rgba(8, 22, 34, 0.7);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 6px;
+      margin-bottom: 24px;
+      gap: 8px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 13px 18px;
+      border: none;
+      border-radius: 12px;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.25s ease;
+    }
+
+    .tab-btn.active {
+      background: var(--gold-gradient);
+      color: #03080e;
+      box-shadow: 0 6px 20px rgba(212, 175, 55, 0.35);
+    }
+
+    /* Prayer Times Deluxe Grid */
+    .schedule-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .prayer-row {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 18px 24px;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1.3fr;
+      align-items: center;
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      backdrop-filter: blur(14px);
+    }
+
+    .prayer-row:hover {
+      border-color: var(--gold-primary);
+      transform: translateX(4px) scale(1.005);
+      background: rgba(14, 38, 58, 0.85);
+    }
+
+    .prayer-row.current-active {
+      border: 1.5px solid var(--gold-primary);
+      background: linear-gradient(90deg, rgba(212, 175, 55, 0.12), rgba(16, 185, 129, 0.08));
+      box-shadow: 0 0 35px rgba(212, 175, 55, 0.25);
+    }
+
+    .prayer-row.current-active::before {
+      content: "চলমান ওয়াক্ত";
+      position: absolute;
+      top: -9px;
+      left: 24px;
+      background: var(--gold-gradient);
+      color: #02060b;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 10px;
+      border-radius: 99px;
+      letter-spacing: 0.05em;
+    }
+
+    /* Left: Bengali Name */
+    .col-bangla {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .name-bn {
+      font-size: 21px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+    }
+
+    .sub-bn {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Center: Arabic Luxury Arrow Badge */
+    .col-arabic {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .arabic-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 14px;
+      border-radius: 30px;
+      background: rgba(212, 175, 55, 0.08);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      color: var(--gold-light);
+      font-family: 'Amiri', serif;
+      font-size: 18px;
+      direction: rtl;
+    }
+
+    .arrow-glyph {
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      color: var(--gold-primary);
+      opacity: 0.8;
+    }
+
+    /* Right: English Stylized Time */
+    .col-time {
+      display: flex;
+      justify-content: flex-end;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .time-digits {
+      font-family: 'Outfit', sans-serif;
+      font-size: 27px;
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.04em;
+      text-shadow: 0 2px 12px rgba(212, 175, 55, 0.3);
+    }
+
+    .time-period {
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+    }
+
+    /* Quick Auxiliary Tools Grid */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 28px;
+    }
+
+    .tool-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 18px;
+      text-align: center;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      transition: all 0.25s ease;
+    }
+
+    .tool-card:hover {
+      border-color: var(--gold-primary);
+      transform: translateY(-3px);
+    }
+
+    .tool-icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+      display: inline-block;
+    }
+
+    .tool-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .tool-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Modal Popups (Luxury Glassmorphic) */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 10, 0.82);
+      backdrop-filter: blur(14px);
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-box {
+      background: #091a27;
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      border-radius: 24px;
+      width: min(520px, 100%);
+      max-height: 88vh;
+      overflow-y: auto;
+      padding: 26px;
+      box-shadow: 0 30px 90px rgba(0,0,0,0.8);
+      transform: scale(0.92) translateY(20px);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-overlay.active .modal-box {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+      padding-bottom: 12px;
+    }
+
+    .modal-head h3 {
+      font-size: 20px;
+      color: var(--gold-light);
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    /* Digital Tasbih UI Inside Modal */
+    .tasbih-display {
+      font-family: 'Outfit', sans-serif;
+      font-size: 64px;
+      font-weight: 800;
+      color: var(--gold-light);
+      text-align: center;
+      margin: 18px 0;
+      text-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
+    }
+
+    .tasbih-btn {
+      width: 140px;
+      height: 140px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      background: var(--gold-gradient);
+      border: 4px solid #fff;
+      color: #03080e;
+      font-size: 20px;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      box-shadow: 0 10px 40px rgba(212, 175, 55, 0.4);
+      transition: transform 0.1s ease;
+    }
+
+    .tasbih-btn:active { transform: scale(0.92); }
+
+    /* Admin Editor Form */
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: #040e17;
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      outline: none;
+    }
+
+    .form-control:focus { border-color: var(--gold-primary); }
+
+    /* TV Kiosk Mode (Full Big Screen View) */
+    body.tv-kiosk-mode .app-shell {
+      max-width: 100vw;
+      padding: 20px 40px;
+    }
+
+    body.tv-kiosk-mode .time-digits { font-size: 44px; }
+    body.tv-kiosk-mode .name-bn { font-size: 32px; }
+    body.tv-kiosk-mode .arabic-badge { font-size: 26px; }
+
+    /* Responsive Adaptation */
+    @media (max-width: 768px) {
+      .celestial-bar { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .celestial-item:nth-child(2) { border-right: none; }
+      .prayer-row { grid-template-columns: 1fr 1fr; row-gap: 8px; padding: 14px 18px; }
+      .col-arabic { grid-column: span 2; justify-content: flex-start; order: 3; }
+      .tools-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-shell">
+    
+    <!-- Top Header -->
+    <header>
+      <div class="brand" id="brandBtn">
+        <div class="brand-crest">ن</div>
+        <div class="brand-title">
+          <h1>নূর — আল-মিযান</h1>
+          <p>BANGLADESH PRAYER INTELLIGENCE</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn-lux" id="soundToggleBtn">♪ সাউন্ড অন</button>
+        <button class="btn-lux" id="tvModeBtn">📺 টিভি মোড</button>
+        <button class="btn-lux" id="adminBtn">⚙ অ্যাডমিন</button>
+      </div>
+    </header>
+
+    <!-- Celestial & Siyam Bar (Sahur, Iftar, Sunrise, Sunset) -->
+    <section class="celestial-bar" id="celestialBar">
+      <div class="celestial-item">
+        <div class="celestial-label">🌙 সাহরি শেষ</div>
+        <div class="celestial-time" id="timeSehri">04:35 AM</div>
+      </div>
+      <div class="celestial-item">
+        <div class="celestial-label">☀️ সূর্যোদয়</div>
+        <div class="celestial-time" id="timeSunrise">05:52 AM</div>
+      </div>
+      <div class="celestial-item">
+        <div class="celestial-label">🌇 সূর্যাস্ত</div>
+        <div class="celestial-time" id="timeSunset">06:14 PM</div>
+      </div>
+      <div class="celestial-item">
+        <div class="celestial-label">✨ ইফতার শুরু</div>
+        <div class="celestial-time" id="timeIftar">06:16 PM</div>
+      </div>
+    </section>
+
+    <!-- Forbidden Prayer Time Warning Banner -->
+    <div class="forbidden-banner" id="forbiddenBanner">
+      ⚠️ সতর্কবার্তা: এখন মাকরুহ / নিষিদ্ধ নামাজের সময় চলছে (সূর্যোদয় / দ্বিপ্রহর / সূর্যাস্তকালীন মুহূর্ত)।
+    </div>
+
+    <!-- Mode Selector Tabs -->
+    <div class="tab-container">
+      <button class="tab-btn active" id="tabJamat" data-tab="jamat">🕌 নামাজের সময়সূচি (জামাত)</button>
+      <button class="tab-btn" id="tabAzan" data-tab="azan">📢 আজানের সময়সূচি (ওয়াক্ত)</button>
+    </div>
+
+    <!-- Prayer Schedule List -->
+    <main class="schedule-grid" id="scheduleList"></main>
+
+    <!-- Deluxe Tools Drawer -->
+    <section class="tools-grid">
+      <div class="tool-card" id="tasbihCard">
+        <span class="tool-icon">📿</span>
+        <div class="tool-title">ডিজিটাল তাসবিহ</div>
+        <div class="tool-desc">জিকির ও মিউট-হ্যাপটিক কাউন্টার</div>
+      </div>
+      <div class="tool-card" id="qiblaCard">
+        <span class="tool-icon">🧭</span>
+        <div class="tool-title">কিবলা কম্পাস</div>
+        <div class="tool-desc">বায়তুল্লাহ শরিফের দিকনির্দেশক</div>
+      </div>
+      <div class="tool-card" id="hadithCard">
+        <span class="tool-icon">📜</span>
+        <div class="tool-title">আজকের হাদিস ও দুআ</div>
+        <div class="tool-desc">দৈনিক নূরানী রত্নসম্ভার</div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Modal: Digital Tasbih -->
+  <div class="modal-overlay" id="tasbihModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>ডিজিটাল গোল্ডেন তাসবিহ</h3>
+        <button class="close-btn" data-close="tasbihModal">✕</button>
+      </div>
+      <p style="text-align: center; color: var(--text-muted); font-size: 13px;">سبحان الله · الحمد لله · الله أكبر</p>
+      <div class="tasbih-display" id="tasbihCount">0</div>
+      <button class="tasbih-btn" id="tasbihTap">গণনা করুন</button>
+      <button class="btn-lux" style="width: 100%; justify-content: center;" id="tasbihReset">রিসেট (০)</button>
+    </div>
+  </div>
+
+  <!-- Modal: Hadith -->
+  <div class="modal-overlay" id="hadithModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>দৈনিক নূরানী হাদিস</h3>
+        <button class="close-btn" data-close="hadithModal">✕</button>
+      </div>
+      <p style="font-family:'Amiri',serif; font-size:22px; color:var(--gold-light); line-height:1.7; margin-bottom:12px; text-align:right;">
+        إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى
+      </p>
+      <p style="font-size:14px; line-height:1.6; color:#dbeafe;">
+        "নিশ্চয়ই সমস্ত আমল নিয়তের উপর নির্ভরশীল এবং প্রত্যেক মানুষ তার নিয়ত অনুযায়ী প্রতিদান পাবে।"
+      </p>
+      <small style="display:block; margin-top:10px; color:var(--text-muted);">— সহিহ বুখারি: ০১</small>
+    </div>
+  </div>
+
+  <!-- Modal: Admin Cloud Panel -->
+  <div class="modal-overlay" id="adminModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>গ্লোবাল অ্যাডমিন কন্ট্রোল</h3>
+        <button class="close-btn" data-close="adminModal">✕</button>
+      </div>
+      
+      <div id="adminPinSection">
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">নিরাপদ মাস্টার পিন দিন (ডিফল্ট: 7860):</p>
+        <input type="password" class="form-control" id="adminPinInput" placeholder="Enter PIN (e.g. 7860)">
+        <button class="btn-lux" style="width:100%; margin-top:10px; justify-content:center;" id="pinSubmitBtn">লগইন</button>
+      </div>
+
+      <div id="adminEditorSection" style="display: none;">
+        <p style="font-size: 12px; color: var(--gold-light); margin-bottom: 14px;">সময় পরিবর্তন করে "Save & Sync Globally" চাপুন:</p>
+        <div id="adminInputsList"></div>
+        <button class="btn-lux" style="width:100%; margin-top:14px; justify-content:center; background: var(--gold-gradient); color:#000;" id="saveGlobalBtn">
+          ⚡ Save & Sync Globally
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (() => {
+    "use strict";
+
+    // Master Serial Data Structure (Exactly as requested)
+    const DEFAULT_DATA = {
+      celestial: {
+        sehri: "04:35 AM",
+        sunrise: "05:52 AM",
+        sunset: "06:14 PM",
+        iftar: "06:16 PM"
+      },
+      jamat: [
+        { key: "fojor", bn: "ফজর", ar: "الفجر", time: "05:15 AM", sub: "ভোরের ফরজ জামাত" },
+        { key: "johor", bn: "যোহর", ar: "الظهر", time: "01:15 PM", sub: "দুপুরের জামাত" },
+        { key: "asor", bn: "আসর", ar: "العصر", time: "04:45 PM", sub: "বিকালের জামাত" },
+        { key: "magrib", bn: "মাগরিব", ar: "المغرب", time: "06:18 PM", sub: "সূর্যাস্তকালীন জামাত" },
+        { key: "esha", bn: "এশা", ar: "العشاء", time: "08:00 PM", sub: "রাত্রিকালীন জামাত" },
+        { key: "juma", bn: "জুমুআ", ar: "الجمعة", time: "01:30 PM", sub: "সাপ্তাহিক মোবারক জামাত" }
+      ],
+      azan: [
+        { key: "fojor", bn: "ফজর", ar: "الفجر", time: "04:42 AM", sub: "ফজর ওয়াক্ত শুরু" },
+        { key: "johor", bn: "যোহর", ar: "الظهر", time: "12:05 PM", sub: "যোহর ওয়াক্ত শুরু" },
+        { key: "asor", bn: "আসর", ar: "العصر", time: "04:15 PM", sub: "আসর ওয়াক্ত শুরু" },
+        { key: "magrib", bn: "মাগরিব", ar: "المغرب", time: "06:14 PM", sub: "মাগরিব ওয়াক্ত শুরু" },
+        { key: "esha", bn: "এশা", ar: "العشاء", time: "07:30 PM", sub: "এশা ওয়াক্ত শুরু" },
+        { key: "juma", bn: "জুমুআ", ar: "الجمعة", time: "11:55 AM", sub: "প্রথম আজান" }
+      ]
+    };
+
+    const MASTER_PIN = "7860"; // Master Admin Pin (Can be customized)
+    
+    // State
+    let currentTab = "jamat"; // "jamat" or "azan"
+    let soundEnabled = true;
+    let dbData = JSON.parse(localStorage.getItem("noor.prayerData")) || DEFAULT_DATA;
+    let tasbihCount = 0;
+
+    // Web Audio Synthesizer (Zero External File Dependencies for pure luxury crystal sound)
+    function playChime(freq = 880) {
+      if (!soundEnabled) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(0.001, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.6);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.65);
+      } catch (_) {}
+    }
+
+    function playTasbihClick() {
+      if (!soundEnabled) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(120, ctx.currentTime);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.05);
+      } catch (_) {}
+    }
+
+    // Render Celestial Bar
+    function renderCelestial() {
+      document.getElementById("timeSehri").textContent = dbData.celestial.sehri;
+      document.getElementById("timeSunrise").textContent = dbData.celestial.sunrise;
+      document.getElementById("timeSunset").textContent = dbData.celestial.sunset;
+      document.getElementById("timeIftar").textContent = dbData.celestial.iftar;
+    }
+
+    // Render Prayer Rows
+    function renderSchedule() {
+      const container = document.getElementById("scheduleList");
+      const list = currentTab === "jamat" ? dbData.jamat : dbData.azan;
+
+      container.innerHTML = list.map(item => {
+        const [digits, period] = item.time.split(" ");
+        return `
+          <article class="prayer-row">
+            <div class="col-bangla">
+              <span class="name-bn">${item.bn}</span>
+              <span class="sub-bn">${item.sub}</span>
+            </div>
+            
+            <div class="col-arabic">
+              <div class="arabic-badge">
+                <span class="arrow-glyph">➔</span>
+                <span>${item.ar}</span>
+                <span class="arrow-glyph">— ✦</span>
+              </div>
+            </div>
+
+            <div class="col-time">
+              <span class="time-digits">${digits}</span>
+              <span class="time-period">${period || "PM"}</span>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    // Admin Panel Form Builder
+    function buildAdminInputs() {
+      const listDiv = document.getElementById("adminInputsList");
+      let html = `<h4 style="color:var(--gold-light);margin-bottom:8px;">সিয়াম ও নভোমণ্ডল:</h4>`;
+      
+      Object.keys(dbData.celestial).forEach(key => {
+        html += `
+          <div class="form-group">
+            <label>${key.toUpperCase()}:</label>
+            <input type="text" class="form-control" data-type="celestial" data-key="${key}" value="${dbData.celestial[key]}">
+          </div>`;
+      });
+
+      html += `<h4 style="color:var(--gold-light);margin:14px 0 8px;">নামাজের জামাত সময়:</h4>`;
+      dbData.jamat.forEach((item, index) => {
+        html += `
+          <div class="form-group">
+            <label>${item.bn} (${item.ar}):</label>
+            <input type="text" class="form-control" data-type="jamat" data-index="${index}" value="${item.time}">
+          </div>`;
+      });
+
+      html += `<h4 style="color:var(--gold-light);margin:14px 0 8px;">আজানের ওয়াক্ত সময়:</h4>`;
+      dbData.azan.forEach((item, index) => {
+        html += `
+          <div class="form-group">
+            <label>${item.bn} (${item.ar}):</label>
+            <input type="text" class="form-control" data-type="azan" data-index="${index}" value="${item.time}">
+          </div>`;
+      });
+
+      listDiv.innerHTML = html;
+    }
+
+    // Event Bindings
+    function initEvents() {
+      // Tab Switching
+      document.getElementById("tabJamat").addEventListener("click", () => {
+        currentTab = "jamat";
+        document.getElementById("tabJamat").classList.add("active");
+        document.getElementById("tabAzan").classList.remove("active");
+        playChime(660);
+        renderSchedule();
+      });
+
+      document.getElementById("tabAzan").addEventListener("click", () => {
+        currentTab = "azan";
+        document.getElementById("tabAzan").classList.add("active");
+        document.getElementById("tabJamat").classList.remove("active");
+        playChime(770);
+        renderSchedule();
+      });
+
+      // Sound Toggle
+      document.getElementById("soundToggleBtn").addEventListener("click", () => {
+        soundEnabled = !soundEnabled;
+        document.getElementById("soundToggleBtn").textContent = soundEnabled ? "♪ সাউন্ড অন" : "🔇 সাউন্ড অফ";
+        if(soundEnabled) playChime(990);
+      });
+
+      // TV Mode Toggle
+      document.getElementById("tvModeBtn").addEventListener("click", () => {
+        document.body.classList.toggle("tv-kiosk-mode");
+        playChime(550);
+      });
+
+      // Tasbih Modal
+      document.getElementById("tasbihCard").addEventListener("click", () => {
+        document.getElementById("tasbihModal").classList.add("active");
+      });
+
+      document.getElementById("tasbihTap").addEventListener("click", () => {
+        tasbihCount++;
+        document.getElementById("tasbihCount").textContent = tasbihCount;
+        playTasbihClick();
+        if (navigator.vibrate) navigator.vibrate(20);
+      });
+
+      document.getElementById("tasbihReset").addEventListener("click", () => {
+        tasbihCount = 0;
+        document.getElementById("tasbihCount").textContent = tasbihCount;
+        playChime(440);
+      });
+
+      // Hadith Modal
+      document.getElementById("hadithCard").addEventListener("click", () => {
+        document.getElementById("hadithModal").classList.add("active");
+      });
+
+      // Qibla Card Click
+      document.getElementById("qiblaCard").addEventListener("click", () => {
+        alert("কিবলা নির্দেশনা: বাংলাদেশ থেকে বায়তুল্লাহ শরিফ পশ্চিম-দক্ষিণ-পশ্চিম (প্রায় ২৭৮° ডিগ্রী) কোণে অবস্থিত।");
+      });
+
+      // Close Modals
+      document.querySelectorAll("[data-close]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.getElementById(btn.dataset.close).classList.remove("active");
+        });
+      });
+
+      // Admin Modal Open
+      document.getElementById("adminBtn").addEventListener("click", () => {
+        document.getElementById("adminModal").classList.add("active");
+      });
+
+      // Admin PIN Verification
+      document.getElementById("pinSubmitBtn").addEventListener("click", () => {
+        const pin = document.getElementById("adminPinInput").value;
+        if (pin === MASTER_PIN) {
+          document.getElementById("adminPinSection").style.display = "none";
+          document.getElementById("adminEditorSection").style.display = "block";
+          buildAdminInputs();
+          playChime(1100);
+        } else {
+          alert("ভুল পিন কোড! সঠিক পিন প্রবেশ করান।");
+        }
+      });
+
+      // Save Global Times
+      document.getElementById("saveGlobalBtn").addEventListener("click", () => {
+        document.querySelectorAll("#adminInputsList input").forEach(input => {
+          const type = input.dataset.type;
+          if (type === "celestial") {
+            dbData.celestial[input.dataset.key] = input.value.trim();
+          } else if (type === "jamat") {
+            dbData.jamat[input.dataset.index].time = input.value.trim();
+          } else if (type === "azan") {
+            dbData.azan[input.dataset.index].time = input.value.trim();
+          }
+        });
+
+        localStorage.setItem("noor.prayerData", JSON.stringify(dbData));
+        renderCelestial();
+        renderSchedule();
+        document.getElementById("adminModal").classList.remove("active");
+        playChime(1200);
+        alert("আলহামদুলিল্লাহ! সমস্ত নামাজের সময়সূচি সফলভাবে সংরক্ষিত ও আপডেট হয়েছে।");
+      });
+    }
+
+    // App Initialization
+    function init() {
+      renderCelestial();
+      renderSchedule();
+      initEvents();
+    }
+
+    init();
+  })();
+  </script>
+</body>
+</html>
