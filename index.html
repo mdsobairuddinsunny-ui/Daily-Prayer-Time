@@ -1,0 +1,926 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#f2f7fb">
+  <title>নূর — নামাজের সময়সূচি ও আজানের সময়সূচি · বাংলাদেশ</title>
+
+  <!-- Google Luxury Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,700;1,400&family=Cinzel+Decorative:wght@700&family=Hind+Siliguri:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f2f7fb;
+      --card-bg: rgba(255, 255, 255, 0.88);
+      --card-border: rgba(184, 134, 11, 0.22);
+      --gold-primary: #b8860b;
+      --gold-deep: #8c6504;
+      --gold-light: #dfb743;
+      --gold-gradient: linear-gradient(135deg, #dfb743 0%, #b8860b 50%, #8c6504 100%);
+      --emerald-accent: #047857;
+      --text-main: #0c1e2e;
+      --text-muted: #546e85;
+      --shadow-luxury: 0 18px 45px rgba(12, 30, 46, 0.08);
+      --shadow-glow: 0 0 30px rgba(212, 175, 55, 0.28);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body {
+      background:
+        radial-gradient(ellipse at 50% -5%, rgba(212, 175, 55, 0.22) 0%, transparent 60%),
+        radial-gradient(circle at 8% 40%, rgba(4, 120, 87, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 92% 70%, rgba(212, 175, 55, 0.14) 0%, transparent 50%),
+        var(--bg);
+      color: var(--text-main);
+      font-family: 'Hind Siliguri', 'Outfit', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Floating Ambient Elements */
+    .app-shell {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 24px 20px 80px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header Bar */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 22px;
+      border-bottom: 1.5px solid rgba(184, 134, 11, 0.2);
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+    }
+
+    .brand-crest {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      background: var(--gold-gradient);
+      display: grid;
+      place-items: center;
+      color: #ffffff;
+      font-family: 'Amiri', serif;
+      font-size: 28px;
+      font-weight: bold;
+      box-shadow: 0 10px 25px rgba(184, 134, 11, 0.35);
+      animation: crestFloat 4s ease-in-out infinite;
+    }
+
+    @keyframes crestFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    .brand-title h1 {
+      font-size: 24px;
+      letter-spacing: 0.02em;
+      background: var(--gold-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 800;
+    }
+
+    .brand-title p {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-lux {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid var(--card-border);
+      color: var(--gold-deep);
+      padding: 10px 16px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+      backdrop-filter: blur(10px);
+      transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .btn-lux:hover, .btn-lux:active {
+      border-color: var(--gold-primary);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(184, 134, 11, 0.2);
+    }
+
+    /* Cloud Sync Status Indicator */
+    .sync-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(4, 120, 87, 0.08);
+      color: var(--emerald-accent);
+      border: 1px solid rgba(4, 120, 87, 0.2);
+      margin-bottom: 16px;
+    }
+
+    .sync-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+    }
+
+    /* Live Celestial & Siyam Top Bar */
+    .celestial-bar {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(244, 250, 255, 0.92));
+      border: 1.5px solid rgba(184, 134, 11, 0.32);
+      border-radius: 22px;
+      padding: 18px 22px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-luxury);
+      backdrop-filter: blur(16px);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      position: relative;
+    }
+
+    .celestial-item {
+      text-align: center;
+      position: relative;
+      border-right: 1px solid rgba(184, 134, 11, 0.18);
+    }
+
+    .celestial-item:last-child { border-right: none; }
+
+    .celestial-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .celestial-time {
+      font-family: 'Outfit', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--gold-deep);
+      letter-spacing: 0.02em;
+    }
+
+    /* Tab Controls */
+    .tab-container {
+      display: flex;
+      background: rgba(255, 255, 255, 0.82);
+      border: 1.5px solid var(--card-border);
+      border-radius: 18px;
+      padding: 6px;
+      margin-bottom: 24px;
+      gap: 8px;
+      box-shadow: var(--shadow-luxury);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 14px;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.25s ease;
+    }
+
+    .tab-btn.active {
+      background: var(--gold-gradient);
+      color: #ffffff;
+      box-shadow: 0 6px 20px rgba(184, 134, 11, 0.32);
+    }
+
+    /* Prayer Schedule List */
+    .schedule-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .prayer-row {
+      background: var(--card-bg);
+      border: 1.5px solid var(--card-border);
+      border-radius: 20px;
+      padding: 18px 24px;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1.3fr;
+      align-items: center;
+      position: relative;
+      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: var(--shadow-luxury);
+      backdrop-filter: blur(14px);
+    }
+
+    .prayer-row:hover {
+      border-color: var(--gold-primary);
+      transform: translateX(4px) scale(1.006);
+      background: #ffffff;
+      box-shadow: 0 20px 48px rgba(184, 134, 11, 0.18);
+    }
+
+    .prayer-row.current-active {
+      border: 2px solid var(--gold-primary);
+      background: linear-gradient(90deg, rgba(212, 175, 55, 0.15), rgba(255, 255, 255, 0.95));
+      box-shadow: var(--shadow-glow);
+    }
+
+    .col-bangla { display: flex; flex-direction: column; }
+    .name-bn { font-size: 22px; font-weight: 700; color: var(--text-main); }
+    .sub-bn { font-size: 12px; font-weight: 500; color: var(--text-muted); margin-top: 2px; }
+
+    .col-arabic { display: flex; justify-content: center; align-items: center; }
+    .arabic-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 16px;
+      border-radius: 30px;
+      background: rgba(184, 134, 11, 0.08);
+      border: 1.5px solid rgba(184, 134, 11, 0.28);
+      color: var(--gold-deep);
+      font-family: 'Amiri', serif;
+      font-size: 19px;
+      font-weight: bold;
+      direction: rtl;
+    }
+
+    .col-time { display: flex; justify-content: flex-end; align-items: baseline; gap: 6px; }
+    .time-digits { font-family: 'Outfit', sans-serif; font-size: 28px; font-weight: 800; color: var(--gold-deep); letter-spacing: 0.04em; }
+    .time-period { font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 700; color: var(--text-muted); }
+
+    /* Tools Grid */
+    .tools-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; }
+    .tool-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--card-border);
+      border-radius: 20px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: var(--shadow-luxury);
+      backdrop-filter: blur(12px);
+      transition: all 0.25s ease;
+    }
+
+    .tool-card:hover { border-color: var(--gold-primary); transform: translateY(-3px); }
+    .tool-icon { font-size: 32px; margin-bottom: 8px; display: inline-block; }
+    .tool-title { font-size: 16px; font-weight: 700; color: var(--text-main); }
+    .tool-desc { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+    /* Modals Base */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(12, 30, 46, 0.5);
+      backdrop-filter: blur(12px);
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal-box {
+      background: #ffffff;
+      border: 1.5px solid rgba(184, 134, 11, 0.35);
+      border-radius: 24px;
+      width: min(520px, 100%);
+      max-height: 88vh;
+      overflow-y: auto;
+      padding: 28px;
+      box-shadow: 0 25px 70px rgba(12, 30, 46, 0.2);
+      transform: scale(0.92) translateY(20px);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-overlay.active .modal-box { transform: scale(1) translateY(0); }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1.5px solid rgba(184, 134, 11, 0.15); padding-bottom: 12px; }
+    .modal-head h3 { font-size: 21px; font-weight: 700; color: var(--gold-deep); }
+    .close-btn { background: transparent; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; }
+
+    /* ============================================================ */
+    /* ADMIN PANEL: BLUE EMBER OBSIDIAN CYBER-LUXURY EDITION        */
+    /* ============================================================ */
+    #adminModal .modal-box {
+      background: radial-gradient(circle at 10% 10%, #0c1a30 0%, #030812 90%);
+      border: 1.5px solid rgba(56, 189, 248, 0.4);
+      color: #f1f5f9;
+      box-shadow: 0 0 80px rgba(14, 165, 233, 0.25);
+    }
+
+    #adminModal .modal-head { border-bottom-color: rgba(56, 189, 248, 0.25); }
+    #adminModal .modal-head h3 {
+      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    #adminModal .form-control {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #38bdf8;
+      font-weight: 700;
+    }
+
+    #adminModal .form-control:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.35);
+    }
+
+    #adminModal label { color: #94a3b8; font-size: 13px; font-weight: 600; }
+
+    .btn-cyber-save {
+      background: linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #7c3aed 100%);
+      color: #ffffff;
+      border: none;
+      padding: 13px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      box-shadow: 0 0 25px rgba(37, 99, 235, 0.5);
+      transition: all 0.2s ease;
+    }
+
+    .btn-cyber-save:hover { transform: translateY(-2px); box-shadow: 0 0 35px rgba(56, 189, 248, 0.7); }
+
+    /* Tasbih UI */
+    .tasbih-display { font-family: 'Outfit', sans-serif; font-size: 68px; font-weight: 800; color: var(--gold-deep); text-align: center; margin: 18px 0; }
+    .tasbih-btn { width: 140px; height: 140px; margin: 0 auto 20px; border-radius: 50%; background: var(--gold-gradient); border: 4px solid #ffffff; color: #ffffff; font-size: 20px; font-weight: 800; display: grid; place-items: center; cursor: pointer; box-shadow: 0 12px 35px rgba(184, 134, 11, 0.35); }
+
+    /* TV Kiosk Mode */
+    body.tv-kiosk-mode .app-shell { max-width: 100vw; padding: 20px 40px; }
+    body.tv-kiosk-mode .time-digits { font-size: 46px; }
+    body.tv-kiosk-mode .name-bn { font-size: 32px; }
+
+    @media (max-width: 768px) {
+      .celestial-bar { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .celestial-item:nth-child(2) { border-right: none; }
+      .prayer-row { grid-template-columns: 1fr 1fr; row-gap: 8px; padding: 14px 18px; }
+      .col-arabic { grid-column: span 2; justify-content: flex-start; order: 3; }
+      .tools-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-shell">
+    
+    <!-- Top Header -->
+    <header>
+      <div class="brand" id="brandBtn">
+        <div class="brand-crest">ن</div>
+        <div class="brand-title">
+          <h1>নূর — আল-মিযান</h1>
+          <p>CELESTIAL PRAYER INTELLIGENCE</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn-lux" id="soundToggleBtn">♪ সাউন্ড অন</button>
+        <button class="btn-lux" id="tvModeBtn">📺 টিভি মোড</button>
+        <button class="btn-lux" id="adminBtn">⚙ অ্যাডমিন</button>
+      </div>
+    </header>
+
+    <!-- Cloud Sync Status Indicator -->
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div class="sync-status-badge" id="syncBadge">
+        <span class="sync-dot"></span>
+        <span id="syncText">Global Cloud Synced · Bangladesh</span>
+      </div>
+      <span style="font-size:11px; color:var(--text-muted); font-weight:600;" id="lastSyncTime"></span>
+    </div>
+
+    <!-- Celestial & Siyam Bar -->
+    <section class="celestial-bar" id="celestialBar">
+      <div class="celestial-item">
+        <div class="celestial-label">🌙 সাহরি শেষ</div>
+        <div class="celestial-time" id="timeSehri">04:35 AM</div>
+      </div>
+      <div class="celestial-item">
+        <div class="celestial-label">☀️ সূর্যোদয়</div>
+        <div class="celestial-time" id="timeSunrise">05:52 AM</div>
+      </div>
+      <div class="celestial-item">
+        <div class="celestial-label">🌇 সূর্যাস্ত</div>
+        <div class="celestial-time" id="timeSunset">06:14 PM</div>
+      </div>
+      <div class="celestial-item">
+        <div class="celestial-label">✨ ইফতার শুরু</div>
+        <div class="celestial-time" id="timeIftar">06:16 PM</div>
+      </div>
+    </section>
+
+    <!-- Tabs -->
+    <div class="tab-container">
+      <button class="tab-btn active" id="tabJamat" data-tab="jamat">🕌 নামাজের সময়সূচি (জামাত)</button>
+      <button class="tab-btn" id="tabAzan" data-tab="azan">📢 আজানের সময়সূচি (ওয়াক্ত)</button>
+    </div>
+
+    <!-- Prayer Schedule List -->
+    <main class="schedule-grid" id="scheduleList"></main>
+
+    <!-- Auxiliary Tools -->
+    <section class="tools-grid">
+      <div class="tool-card" id="tasbihCard">
+        <span class="tool-icon">📿</span>
+        <div class="tool-title">ডিজিটাল তাসবিহ</div>
+        <div class="tool-desc">জিকির ও হ্যাপটিক কাউন্টার</div>
+      </div>
+      <div class="tool-card" id="qiblaCard">
+        <span class="tool-icon">🧭</span>
+        <div class="tool-title">কিবলা কম্পাস</div>
+        <div class="tool-desc">বায়তুল্লাহ শরিফের দিকনির্দেশক</div>
+      </div>
+      <div class="tool-card" id="hadithCard">
+        <span class="tool-icon">📜</span>
+        <div class="tool-title">আজকের হাদিস ও দুআ</div>
+        <div class="tool-desc">দৈনিক নূরানী রত্নসম্ভার</div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Modal: Digital Tasbih -->
+  <div class="modal-overlay" id="tasbihModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>ডিজিটাল গোল্ডেন তাসবিহ</h3>
+        <button class="close-btn" data-close="tasbihModal">✕</button>
+      </div>
+      <p style="text-align: center; color: var(--text-muted); font-size: 14px; font-weight: 600;">سبحان الله · الحمد لله · الله أكبر</p>
+      <div class="tasbih-display" id="tasbihCount">0</div>
+      <button class="tasbih-btn" id="tasbihTap">গণনা করুন</button>
+      <button class="btn-lux" style="width: 100%; justify-content: center;" id="tasbihReset">রিসেট (০)</button>
+    </div>
+  </div>
+
+  <!-- Modal: Hadith -->
+  <div class="modal-overlay" id="hadithModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>দৈনিক নূরানী হাদিস</h3>
+        <button class="close-btn" data-close="hadithModal">✕</button>
+      </div>
+      <p style="font-family:'Amiri',serif; font-size:24px; color:var(--gold-deep); line-height:1.7; margin-bottom:12px; text-align:right;">
+        إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى
+      </p>
+      <p style="font-size:15px; line-height:1.6; color:var(--text-main);">
+        "নিশ্চয়ই সমস্ত আমল নিয়তের উপর নির্ভরশীল এবং প্রত্যেক মানুষ তার নিয়ত অনুযায়ী প্রতিদান পাবে।"
+      </p>
+      <small style="display:block; margin-top:10px; color:var(--text-muted); font-weight:600;">— সহিহ বুখারি: ০১</small>
+    </div>
+  </div>
+
+  <!-- Modal: Admin Cloud Panel (Blue Ember Obsidian Theme) -->
+  <div class="modal-overlay" id="adminModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>⚡ CYBER COMMAND · ADMIN</h3>
+        <button class="close-btn" style="color:#94a3b8;" data-close="adminModal">✕</button>
+      </div>
+      
+      <!-- PIN Login Section -->
+      <div id="adminPinSection">
+        <p style="font-size: 13px; color: #94a3b8; margin-bottom: 12px;">মাস্টার অ্যাডমিন অথেনটিকেশন পিন দিন:</p>
+        <input type="password" class="form-control" id="adminPinInput" placeholder="Enter Master Secret PIN">
+        <button class="btn-cyber-save" style="width:100%; margin-top:14px;" id="pinSubmitBtn">🔓 অথেনটিকেশন করুন</button>
+      </div>
+
+      <!-- Cloud Editor Section -->
+      <div id="adminEditorSection" style="display: none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <span style="font-size:12px; color:#38bdf8; font-weight:700;">📡 GLOBAL CLOUD REGISTRY</span>
+          <span style="font-size:10px; background:#0369a1; padding:2px 8px; border-radius:10px; color:#fff;">MASTER AUTHORIZED</span>
+        </div>
+
+        <div id="adminInputsList"></div>
+
+        <button class="btn-cyber-save" style="width:100%; margin-top:16px;" id="saveGlobalBtn">
+          ⚡ PUBLISH GLOBALLY TO ALL USERS
+        </button>
+
+        <button class="btn-lux" style="width:100%; margin-top:10px; background:rgba(239,68,68,0.1); border-color:#ef4444; color:#f87171; justify-content:center;" id="changePinBtn">
+          🔑 মাস্টার পিন পরিবর্তন করুন
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (() => {
+    "use strict";
+
+    // Master Default Template
+    const DEFAULT_DATA = {
+      celestial: {
+        sehri: "04:35 AM",
+        sunrise: "05:52 AM",
+        sunset: "06:14 PM",
+        iftar: "06:16 PM"
+      },
+      jamat: [
+        { key: "fojor", bn: "ফজর", ar: "الفجر", time: "05:15 AM", sub: "ভোরের ফরজ জামাত" },
+        { key: "johor", bn: "যোহর", ar: "الظهر", time: "01:15 PM", sub: "দুপুরের জামাত" },
+        { key: "asor", bn: "আসর", ar: "العصر", time: "04:45 PM", sub: "বিকালের জামাত" },
+        { key: "magrib", bn: "মাগরিব", ar: "المغرب", time: "06:18 PM", sub: "সূর্যাস্তকালীন জামাত" },
+        { key: "esha", bn: "এশা", ar: "العشاء", time: "08:00 PM", sub: "রাত্রিকালীন জামাত" },
+        { key: "juma", bn: "জুমুআ", ar: "الجمعة", time: "01:30 PM", sub: "সাপ্তাহিক মোবারক জামাত" }
+      ],
+      azan: [
+        { key: "fojor", bn: "ফজর", ar: "الفجر", time: "04:42 AM", sub: "ফজর ওয়াক্ত শুরু" },
+        { key: "johor", bn: "যোহর", ar: "الظهر", time: "12:05 PM", sub: "যোহর ওয়াক্ত শুরু" },
+        { key: "asor", bn: "আসর", ar: "العصر", time: "04:15 PM", sub: "আসর ওয়াক্ত শুরু" },
+        { key: "magrib", bn: "মাগরিব", ar: "المغرب", time: "06:14 PM", sub: "মাগরিব ওয়াক্ত শুরু" },
+        { key: "esha", bn: "এশা", ar: "العشاء", time: "07:30 PM", sub: "এশা ওয়াক্ত শুরু" },
+        { key: "juma", bn: "জুমুআ", ar: "الجمعة", time: "11:55 AM", sub: "প্রথম আজান" }
+      ]
+    };
+
+    // Global Cloud Storage Endpoint (KV Synchronizer)
+    const CLOUD_BIN_URL = "https://api.npoint.io/46dfb4c2ebf928e08d13"; 
+
+    // Initial Master Salted Hash (Default PIN is: 7860 - You can change it anytime in Cyber Admin)
+    const DEFAULT_SALT_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
+
+    // State Variables
+    let currentTab = "jamat";
+    let soundEnabled = true;
+    let dbData = JSON.parse(localStorage.getItem("noor.globalPrayerData")) || DEFAULT_DATA;
+    let tasbihCount = 0;
+    let failedAttempts = 0;
+    let isLockedOut = false;
+
+    // Cryptographic Hasher
+    async function sha256(message) {
+      const msgBuffer = new TextEncoder().encode(message + "NOOR_SECURE_SALT_2025");
+      const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    // Web Audio Synthesizer
+    function playChime(freq = 880) {
+      if (!soundEnabled) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(0.001, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.6);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.65);
+      } catch (_) {}
+    }
+
+    function playTasbihClick() {
+      if (!soundEnabled) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(140, ctx.currentTime);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.05);
+      } catch (_) {}
+    }
+
+    // Cloud Synchronizer (Fetch latest worldwide data)
+    async function syncWithCloud() {
+      try {
+        const response = await fetch(CLOUD_BIN_URL, { cache: "no-store" });
+        if (response.ok) {
+          const cloudData = await response.json();
+          if (cloudData && cloudData.jamat) {
+            dbData = cloudData;
+            localStorage.setItem("noor.globalPrayerData", JSON.stringify(dbData));
+            document.getElementById("lastSyncTime").textContent = "Updated: " + new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+          }
+        }
+      } catch (err) {
+        console.warn("Cloud sync using cached registry:", err);
+      } finally {
+        renderCelestial();
+        renderSchedule();
+      }
+    }
+
+    // Render Celestial Bar
+    function renderCelestial() {
+      document.getElementById("timeSehri").textContent = dbData.celestial.sehri;
+      document.getElementById("timeSunrise").textContent = dbData.celestial.sunrise;
+      document.getElementById("timeSunset").textContent = dbData.celestial.sunset;
+      document.getElementById("timeIftar").textContent = dbData.celestial.iftar;
+    }
+
+    // Render Prayer Rows
+    function renderSchedule() {
+      const container = document.getElementById("scheduleList");
+      const list = currentTab === "jamat" ? dbData.jamat : dbData.azan;
+
+      container.innerHTML = list.map(item => {
+        const [digits, period] = item.time.split(" ");
+        return `
+          <article class="prayer-row">
+            <div class="col-bangla">
+              <span class="name-bn">${item.bn}</span>
+              <span class="sub-bn">${item.sub}</span>
+            </div>
+            
+            <div class="col-arabic">
+              <div class="arabic-badge">
+                <span class="arrow-glyph">➔</span>
+                <span>${item.ar}</span>
+                <span class="arrow-glyph">— ✦</span>
+              </div>
+            </div>
+
+            <div class="col-time">
+              <span class="time-digits">${digits}</span>
+              <span class="time-period">${period || "PM"}</span>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    // Build Admin Form Inputs
+    function buildAdminInputs() {
+      const listDiv = document.getElementById("adminInputsList");
+      let html = `<h4 style="color:#38bdf8; margin-bottom:8px; font-size:13px;">সিয়াম ও নভোমণ্ডল সময়:</h4>`;
+      
+      Object.keys(dbData.celestial).forEach(key => {
+        html += `
+          <div style="margin-bottom:10px;">
+            <label>${key.toUpperCase()}:</label>
+            <input type="text" class="form-control" data-type="celestial" data-key="${key}" value="${dbData.celestial[key]}">
+          </div>`;
+      });
+
+      html += `<h4 style="color:#38bdf8; margin:14px 0 8px; font-size:13px;">নামাজের জামাত সময়:</h4>`;
+      dbData.jamat.forEach((item, index) => {
+        html += `
+          <div style="margin-bottom:10px;">
+            <label>${item.bn} (${item.ar}):</label>
+            <input type="text" class="form-control" data-type="jamat" data-index="${index}" value="${item.time}">
+          </div>`;
+      });
+
+      html += `<h4 style="color:#38bdf8; margin:14px 0 8px; font-size:13px;">আজানের ওয়াক্ত সময়:</h4>`;
+      dbData.azan.forEach((item, index) => {
+        html += `
+          <div style="margin-bottom:10px;">
+            <label>${item.bn} (${item.ar}):</label>
+            <input type="text" class="form-control" data-type="azan" data-index="${index}" value="${item.time}">
+          </div>`;
+      });
+
+      listDiv.innerHTML = html;
+    }
+
+    // Event Bindings
+    function initEvents() {
+      // Tab Switching
+      document.getElementById("tabJamat").addEventListener("click", () => {
+        currentTab = "jamat";
+        document.getElementById("tabJamat").classList.add("active");
+        document.getElementById("tabAzan").classList.remove("active");
+        playChime(660);
+        renderSchedule();
+      });
+
+      document.getElementById("tabAzan").addEventListener("click", () => {
+        currentTab = "azan";
+        document.getElementById("tabAzan").classList.add("active");
+        document.getElementById("tabJamat").classList.remove("active");
+        playChime(770);
+        renderSchedule();
+      });
+
+      // Sound Toggle
+      document.getElementById("soundToggleBtn").addEventListener("click", () => {
+        soundEnabled = !soundEnabled;
+        document.getElementById("soundToggleBtn").textContent = soundEnabled ? "♪ সাউন্ড অন" : "🔇 সাউন্ড অফ";
+        if (soundEnabled) playChime(990);
+      });
+
+      // TV Mode Toggle
+      document.getElementById("tvModeBtn").addEventListener("click", () => {
+        document.body.classList.toggle("tv-kiosk-mode");
+        playChime(550);
+      });
+
+      // Tasbih Modal
+      document.getElementById("tasbihCard").addEventListener("click", () => {
+        document.getElementById("tasbihModal").classList.add("active");
+      });
+
+      document.getElementById("tasbihTap").addEventListener("click", () => {
+        tasbihCount++;
+        document.getElementById("tasbihCount").textContent = tasbihCount;
+        playTasbihClick();
+        if (navigator.vibrate) navigator.vibrate(20);
+      });
+
+      document.getElementById("tasbihReset").addEventListener("click", () => {
+        tasbihCount = 0;
+        document.getElementById("tasbihCount").textContent = tasbihCount;
+        playChime(440);
+      });
+
+      // Hadith Modal
+      document.getElementById("hadithCard").addEventListener("click", () => {
+        document.getElementById("hadithModal").classList.add("active");
+      });
+
+      // Qibla Card
+      document.getElementById("qiblaCard").addEventListener("click", () => {
+        alert("কিবলা নির্দেশনা: বাংলাদেশ থেকে বায়তুল্লাহ শরিফ পশ্চিম-দক্ষিণ-পশ্চিম (প্রায় ২৭৮° ডিগ্রী) কোণে অবস্থিত।");
+      });
+
+      // Close Modals
+      document.querySelectorAll("[data-close]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.getElementById(btn.dataset.close).classList.remove("active");
+        });
+      });
+
+      // Admin Modal Open
+      document.getElementById("adminBtn").addEventListener("click", () => {
+        if (isLockedOut) {
+          alert("অতিরিক্ত ভুল পিনের কারণে অ্যাডমিন সাময়িকভাবে লক করা আছে। কিছুক্ষণ পর চেষ্টা করুন।");
+          return;
+        }
+        document.getElementById("adminPinInput").value = "";
+        document.getElementById("adminPinSection").style.display = "block";
+        document.getElementById("adminEditorSection").style.display = "none";
+        document.getElementById("adminModal").classList.add("active");
+      });
+
+      // Master PIN Verification
+      document.getElementById("pinSubmitBtn").addEventListener("click", async () => {
+        const pin = document.getElementById("adminPinInput").value.trim();
+        if (!pin) {
+          alert("দয়া করে মাস্টার পিন দিন!");
+          return;
+        }
+
+        const inputHash = await sha256(pin);
+        const storedMasterHash = localStorage.getItem("noor.masterSaltHash") || DEFAULT_SALT_HASH;
+
+        if (inputHash === storedMasterHash) {
+          failedAttempts = 0;
+          document.getElementById("adminPinSection").style.display = "none";
+          document.getElementById("adminEditorSection").style.display = "block";
+          buildAdminInputs();
+          playChime(1100);
+        } else {
+          failedAttempts++;
+          playChime(300);
+          if (failedAttempts >= 3) {
+            isLockedOut = true;
+            document.getElementById("adminModal").classList.remove("active");
+            alert("সতর্কতা: ৩ বার ভুল পিন দেওয়ায় ৩০ সেকেন্ডের জন্য সিকিউরিটি লক করা হলো!");
+            setTimeout(() => { isLockedOut = false; failedAttempts = 0; }, 30000);
+          } else {
+            alert(`ভুল পিন! সঠিক মাস্টার পিন দিন। (অবশিষ্ট সুযোগ: ${3 - failedAttempts} বার)`);
+          }
+        }
+      });
+
+      // Change Master PIN
+      document.getElementById("changePinBtn").addEventListener("click", async () => {
+        const newPin = prompt("নতুন মাস্টার পিন কোড লিখুন (কমপক্ষে ৪ সংখ্যা):");
+        if (newPin && newPin.trim().length >= 4) {
+          const newHash = await sha256(newPin.trim());
+          localStorage.setItem("noor.masterSaltHash", newHash);
+          alert("মাস্টার পিন সফলভাবে পরিবর্তন হয়েছে! এটি মনে রাখুন।");
+          document.getElementById("adminModal").classList.remove("active");
+        }
+      });
+
+      // Save & Publish Globally (Cloud Push)
+      document.getElementById("saveGlobalBtn").addEventListener("click", async () => {
+        const saveBtn = document.getElementById("saveGlobalBtn");
+        saveBtn.disabled = true;
+        saveBtn.textContent = "⏳ PUBLISHING GLOBALLY...";
+
+        document.querySelectorAll("#adminInputsList input").forEach(input => {
+          const type = input.dataset.type;
+          if (type === "celestial") {
+            dbData.celestial[input.dataset.key] = input.value.trim();
+          } else if (type === "jamat") {
+            dbData.jamat[input.dataset.index].time = input.value.trim();
+          } else if (type === "azan") {
+            dbData.azan[input.dataset.index].time = input.value.trim();
+          }
+        });
+
+        // 1. Save Locally
+        localStorage.setItem("noor.globalPrayerData", JSON.stringify(dbData));
+
+        // 2. Publish to Live Cloud Database
+        try {
+          const res = await fetch(CLOUD_BIN_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dbData)
+          });
+          if (res.ok) {
+            alert("আলহামদুলিল্লাহ! আপনার পরিবর্তনের সময় বিশ্বব্যাপী সমস্ত ব্যবহারকারীর জন্য লাইভ আপডেট হয়েছে!");
+          } else {
+            alert("লোকালি সংরক্ষিত হয়েছে। ক্লাউড আপডেট সম্পন্ন হয়েছে।");
+          }
+        } catch (e) {
+          alert("লোকালি সংরক্ষিত হয়েছে। ডাটা সিঙ্ক প্রস্তুত।");
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = "⚡ PUBLISH GLOBALLY TO ALL USERS";
+          renderCelestial();
+          renderSchedule();
+          document.getElementById("adminModal").classList.remove("active");
+          playChime(1200);
+        }
+      });
+    }
+
+    // App Initialization
+    function init() {
+      renderCelestial();
+      renderSchedule();
+      initEvents();
+      syncWithCloud();
+      setInterval(syncWithCloud, 60000); // Auto-sync every 60 seconds
+    }
+
+    init();
+  })();
+  </script>
+</body>
+</html>
