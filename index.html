@@ -3,33 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>নূর — আল-মিযান | Celestial Prayer & Hadith Intelligence</title>
+    <title>নূর — আল-মিযান | Celestial Prayer Intelligence</title>
     
     <!-- Premium Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cinzel+Decorative:wght@700;900&family=Hind+Siliguri:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cinzel+Decorative:wght@700;900&family=Hind+Siliguri:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Lucide Icons -->
+    <!-- Icons & Global Sync Engine -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
 
     <style>
         :root {
             --heaven-bg: #fcfbf7;
-            --heaven-card: rgba(255, 255, 255, 0.9);
+            --heaven-card: rgba(255, 255, 255, 0.94);
             --gold-primary: #c5a059;
-            --gold-light: #f4ecdc;
+            --gold-light: #f6efe2;
             --gold-border: #e8d7b8;
             --gold-dark: #8c6d2d;
             --gold-gradient: linear-gradient(135deg, #dfba73 0%, #c5a059 50%, #9e7a32 100%);
             --emerald: #1e5138;
-            --text-dark: #232323;
+            --emerald-light: #eaf3ed;
+            --text-dark: #1d1d1d;
             --text-muted: #6e6b64;
             --card-shadow: 0 12px 36px rgba(197, 160, 89, 0.15);
         }
 
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            margin: 0; padding: 0; box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
             font-family: 'Hind Siliguri', sans-serif;
         }
@@ -39,532 +41,385 @@
             color: var(--text-dark);
             min-height: 100vh;
             overflow-x: hidden;
+            position: relative;
         }
 
-        #bg-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
+        #heaven-canvas {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1; pointer-events: none;
         }
 
-        .app-container {
-            max-width: 500px;
+        .app-shell {
+            max-width: 520px;
             margin: 0 auto;
-            padding: 15px 15px 120px;
+            padding: 15px 18px 120px;
+            position: relative;
         }
 
-        /* Header */
-        header { text-align: center; padding: 20px 0; }
-        .premium-badge {
-            display: inline-block;
-            padding: 4px 15px;
-            background: var(--gold-light);
-            border: 1px solid var(--gold-border);
-            border-radius: 50px;
-            font-size: 0.7rem;
-            color: var(--gold-dark);
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 8px;
-        }
-        .app-logo h1 {
-            font-family: 'Cinzel Decorative', serif;
-            font-size: 2.2rem;
-            background: var(--gold-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 5px 15px rgba(197, 160, 89, 0.2);
+        header { text-align: center; padding: 15px 0 10px; }
+
+        .brand-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 14px; background: var(--gold-light);
+            border: 1px solid var(--gold-border); border-radius: 30px;
+            font-size: 0.72rem; color: var(--gold-dark);
+            font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
         }
 
-        /* Hero Clock */
-        .hero-clock {
-            background: var(--heaven-card);
-            backdrop-filter: blur(15px);
-            border: 1px solid var(--gold-border);
-            border-radius: 25px;
-            padding: 20px;
-            margin: 15px 0;
-            text-align: center;
-            box-shadow: var(--card-shadow);
+        .app-title {
+            font-family: 'Cinzel Decorative', serif; font-size: 2.1rem; font-weight: 900;
+            background: var(--gold-gradient); -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent; margin-top: 5px;
         }
-        #hero-time { font-family: 'Outfit'; font-size: 2.8rem; font-weight: 700; color: var(--gold-dark); }
-        #hero-date { font-size: 0.95rem; color: var(--text-muted); }
 
-        /* Sync Status */
-        .sync-status {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            font-size: 0.75rem;
-            color: var(--emerald);
-            margin-top: 10px;
-            font-weight: 600;
+        .sync-pill {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 5px 14px; background: rgba(30, 81, 56, 0.08);
+            border: 1px solid rgba(30, 81, 56, 0.25); border-radius: 30px;
+            font-size: 0.74rem; color: var(--emerald); font-weight: 700; margin-top: 10px;
         }
-        .sync-dot { width: 8px; height: 8px; background: var(--emerald); border-radius: 50%; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
-        /* Tabs */
+        .sync-dot {
+            width: 8px; height: 8px; background: var(--emerald);
+            border-radius: 50%; box-shadow: 0 0 8px var(--emerald);
+            animation: pulseDot 2s infinite;
+        }
+
+        @keyframes pulseDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .hero-clock-card {
+            background: var(--heaven-card); backdrop-filter: blur(15px);
+            border: 1px solid var(--gold-border); border-radius: 25px;
+            padding: 22px; margin: 15px 0; box-shadow: var(--card-shadow);
+            text-align: center; position: relative; overflow: hidden;
+        }
+
+        .live-time-val { font-family: 'Outfit'; font-size: 2.8rem; font-weight: 700; color: var(--gold-dark); }
+        .live-date-val { font-size: 0.95rem; color: var(--text-muted); font-weight: 500; }
+
         .tab-box {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            background: rgba(197, 160, 89, 0.1);
-            padding: 5px;
-            border-radius: 20px;
-            margin: 20px 0;
-            border: 1px solid var(--gold-border);
+            display: grid; grid-template-columns: 1fr 1fr;
+            background: rgba(197, 160, 89, 0.12); padding: 4px;
+            border-radius: 20px; margin-bottom: 15px; border: 1px solid var(--gold-border);
         }
-        .tab-btn {
-            padding: 12px;
-            border: none;
-            background: transparent;
-            font-weight: 700;
-            color: var(--gold-dark);
-            border-radius: 15px;
-            cursor: pointer;
-        }
-        .tab-btn.active { background: white; color: var(--emerald); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 
-        /* Prayer Cards */
-        .prayer-card {
-            background: var(--heaven-card);
-            padding: 18px 20px;
-            border-radius: 22px;
-            margin-bottom: 12px;
-            border: 1px solid var(--gold-border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.02);
+        .tab-trigger {
+            padding: 12px; border: none; background: transparent;
+            font-size: 0.95rem; font-weight: 700; color: var(--gold-dark);
+            border-radius: 15px; cursor: pointer; transition: 0.3s;
         }
-        .p-info { display: flex; align-items: center; gap: 15px; }
-        .p-serial { width: 32px; height: 32px; background: var(--gold-light); color: var(--gold-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: 'Outfit'; }
-        .p-name-bn { font-size: 1.1rem; font-weight: 700; }
-        .p-name-ar { font-family: 'Amiri'; font-size: 0.9rem; color: var(--gold-dark); opacity: 0.8; }
-        .p-time { font-family: 'Outfit'; font-size: 1.3rem; font-weight: 700; color: var(--emerald); }
 
-        /* Celestial HUD */
-        .celestial-hud { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 20px; }
-        .hud-item { background: white; border: 1px solid var(--gold-border); border-radius: 15px; padding: 10px 5px; text-align: center; }
-        .hud-label { font-size: 0.7rem; color: var(--text-muted); font-weight: 700; display: block; }
-        .hud-val { font-family: 'Outfit'; font-size: 0.85rem; font-weight: 700; color: var(--emerald); }
+        .tab-trigger.active { background: white; color: var(--emerald); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
 
-        /* Nav Bar */
-        .nav-bar {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 450px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 35px;
-            border: 1px solid var(--gold-border);
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 5px;
-            box-shadow: 0 10px 40px rgba(197, 160, 89, 0.3);
-            z-index: 1000;
+        .prayer-item {
+            background: var(--heaven-card); border: 1px solid var(--gold-border);
+            border-radius: 22px; padding: 15px 18px; display: flex;
+            align-items: center; justify-content: space-between;
+            margin-bottom: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.02);
         }
-        .nav-item {
+
+        .item-left { display: flex; align-items: center; gap: 14px; }
+        .serial-badge {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--gold-light); border: 1px solid var(--gold-border);
+            color: var(--gold-dark); display: flex; align-items: center;
+            justify-content: center; font-weight: 700; font-family: 'Outfit';
+        }
+
+        .name-bn { font-size: 1.15rem; font-weight: 700; }
+        .name-ar { font-family: 'Amiri'; font-size: 0.9rem; color: var(--gold-dark); opacity: 0.8; }
+        .time-digits { font-family: 'Outfit'; font-size: 1.3rem; font-weight: 700; color: var(--emerald); }
+
+        .celestial-hud { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+        .hud-card { background: white; border: 1px solid var(--gold-border); border-radius: 16px; padding: 10px 5px; text-align: center; }
+        .hud-title { font-size: 0.72rem; color: var(--text-muted); font-weight: 700; display: block; }
+        .hud-time { font-family: 'Outfit'; font-size: 0.88rem; font-weight: 700; color: var(--emerald); }
+
+        .royal-navbar {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 92%; max-width: 440px; background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(20px); border: 1px solid var(--gold-border);
+            border-radius: 35px; display: flex; justify-content: space-around;
+            padding: 10px 5px; box-shadow: 0 15px 40px rgba(197, 160, 89, 0.3); z-index: 1000;
+        }
+
+        .nav-link {
             background: none; border: none; color: var(--gold-dark);
-            display: flex; flex-direction: column; align-items: center; font-size: 0.7rem; font-weight: 700; gap: 4px;
+            display: flex; flex-direction: column; align-items: center;
+            font-size: 0.72rem; font-weight: 700; gap: 4px; cursor: pointer;
         }
-        .nav-item i { width: 22px; height: 22px; }
 
-        /* Modal Screens */
-        .modal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--heaven-bg);
-            z-index: 2000; display: none; flex-direction: column;
+        .modal-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--heaven-bg); z-index: 10000; display: none; flex-direction: column;
         }
-        .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--gold-border); display: flex; justify-content: space-between; align-items: center; }
-        .modal-body { flex: 1; overflow-y: auto; padding: 20px; }
-        .close-btn { background: var(--gold-light); border: none; width: 35px; height: 35px; border-radius: 50%; color: var(--gold-dark); cursor: pointer; }
 
-        /* Hadith List */
+        .modal-head { padding: 15px 20px; border-bottom: 1px solid var(--gold-border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-scroll { flex: 1; overflow-y: auto; padding: 20px 18px 100px; }
+
         .hadith-card { background: white; border: 1px solid var(--gold-border); border-radius: 20px; padding: 20px; margin-bottom: 15px; }
-        .h-ar { font-family: 'Amiri'; font-size: 1.4rem; direction: rtl; text-align: right; color: var(--emerald); line-height: 1.8; margin-bottom: 15px; }
-        .h-bn { font-size: 1rem; line-height: 1.6; margin-bottom: 10px; }
-        .h-meta { font-size: 0.8rem; color: var(--gold-dark); border-top: 1px dashed var(--gold-border); padding-top: 10px; display: flex; justify-content: space-between; }
+        .h-matn-ar { font-family: 'Amiri'; font-size: 1.4rem; direction: rtl; text-align: right; color: var(--emerald); line-height: 1.8; margin-bottom: 10px; }
+        .h-trans-bn { font-size: 1rem; line-height: 1.6; margin-bottom: 10px; }
 
-        /* Admin Controls */
-        .admin-box { max-width: 350px; margin: 100px auto; text-align: center; }
-        .pin-field { width: 100%; padding: 15px; font-size: 1.8rem; text-align: center; border: 2px solid var(--gold-border); border-radius: 15px; letter-spacing: 15px; outline: none; margin-bottom: 20px; }
-        .btn-gold { background: var(--gold-gradient); color: white; border: none; padding: 15px 30px; border-radius: 50px; font-weight: 700; width: 100%; box-shadow: 0 5px 15px rgba(197, 160, 89, 0.3); }
+        .pin-mask-field { width: 100%; padding: 15px; font-size: 1.8rem; text-align: center; border: 2px solid var(--gold-border); border-radius: 18px; letter-spacing: 12px; outline: none; margin-bottom: 20px; }
+        .btn-royal-gold { width: 100%; padding: 15px; background: var(--gold-gradient); border: none; border-radius: 30px; color: white; font-weight: 700; font-size: 1rem; box-shadow: 0 5px 15px rgba(197, 160, 89, 0.4); cursor: pointer; }
 
-        .editor-grid { display: grid; gap: 15px; }
-        .input-group { background: white; padding: 12px; border-radius: 15px; border: 1px solid var(--gold-border); text-align: left; }
-        .input-group label { display: block; font-size: 0.8rem; color: var(--gold-dark); margin-bottom: 5px; font-weight: 700; }
-        .input-group input { width: 100%; border: none; font-size: 1.1rem; color: var(--emerald); font-family: 'Outfit'; outline: none; }
-
-        /* Welcome Overlay */
-        .welcome-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px; }
-        .welcome-card { background:white; border-radius:30px; padding:30px; text-align:center; border:2px solid var(--gold-primary); max-width:400px; }
+        .editor-section-card { background: white; border: 1px solid var(--gold-border); border-radius: 20px; padding: 16px; margin-bottom: 15px; }
+        .time-edit-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f7f3ea; }
+        .time-edit-row input { width: 120px; padding: 8px; border: 1px solid var(--gold-border); border-radius: 10px; text-align: center; font-family: 'Outfit'; font-weight: 700; color: var(--emerald); outline: none; }
     </style>
 </head>
 <body>
 
-    <canvas id="bg-canvas"></canvas>
+    <canvas id="heaven-canvas"></canvas>
 
-    <div class="app-container">
+    <div class="app-shell">
         <header>
-            <span class="premium-badge">Noor Al-Mizan Edition</span>
-            <div class="app-logo">
-                <h1>নূর — আল-মিযান</h1>
-            </div>
-            <div class="sync-status">
+            <div class="brand-badge"><i data-lucide="sparkles" style="width:12px;"></i> PREMIUM GLOBAL EDITION</div>
+            <h1 class="app-title">নূর — আল-মিযান</h1>
+            <div class="sync-pill">
                 <span class="sync-dot"></span>
-                গ্লোবাল ক্লাউড সিঙ্ক সক্রিয়
+                <span id="sync-msg">গ্লোবাল ক্লাউড সিঙ্ক: কানেক্ট হচ্ছে...</span>
             </div>
         </header>
 
-        <div class="hero-clock">
-            <div id="hero-time">00:00:00 AM</div>
-            <div id="hero-date">...</div>
+        <div class="hero-clock-card">
+            <div class="live-time-val" id="time-hero">00:00:00 AM</div>
+            <div class="live-date-val" id="date-hero">তারিখ লোড হচ্ছে...</div>
         </div>
 
         <div class="tab-box">
-            <button class="tab-btn active" onclick="switchMode('jamat', this)">নামাজের জামাত</button>
-            <button class="tab-btn" onclick="switchMode('azan', this)">আজানের সময়</button>
+            <button class="tab-trigger active" id="tab-btn-jamat" onclick="setPrayerMode('jamat')">নামাজের জামাত</button>
+            <button class="tab-trigger" id="tab-btn-azan" onclick="setPrayerMode('azan')">আজানের সময়</button>
         </div>
 
-        <div id="prayer-list-container">
-            <!-- Dynamic Cards -->
-        </div>
+        <main class="prayer-flow" id="prayer-cards-container"></main>
 
         <div class="celestial-hud">
-            <div class="hud-item">
-                <span class="hud-label">সাহরি</span>
-                <span class="hud-val" id="hud-sehri">--:-- --</span>
-            </div>
-            <div class="hud-item">
-                <span class="hud-label">সূর্যোদয়</span>
-                <span class="hud-val" id="hud-sunrise">--:-- --</span>
-            </div>
-            <div class="hud-item">
-                <span class="hud-label">সূর্যাস্ত</span>
-                <span class="hud-val" id="hud-sunset">--:-- --</span>
-            </div>
-            <div class="hud-item">
-                <span class="hud-label">ইফতার</span>
-                <span class="hud-val" id="hud-iftar">--:-- --</span>
-            </div>
+            <div class="hud-card"><span class="hud-title">সাহরি</span><span class="hud-time" id="val-sehri">--:-- --</span></div>
+            <div class="hud-card"><span class="hud-title">সূর্যোদয়</span><span class="hud-time" id="val-sunrise">--:-- --</span></div>
+            <div class="hud-card"><span class="hud-title">সূর্যাস্ত</span><span class="hud-time" id="val-sunset">--:-- --</span></div>
+            <div class="hud-card"><span class="hud-title">ইফতার</span><span class="hud-time" id="val-iftar">--:-- --</span></div>
         </div>
     </div>
 
-    <!-- Nav Bar -->
-    <nav class="nav-bar">
-        <button class="nav-item" onclick="openScreen('modal-quran')">
-            <i data-lucide="book-open"></i>
-            <span>কুরআন</span>
-        </button>
-        <button class="nav-item" onclick="openScreen('modal-hadith')">
-            <i data-lucide="scroll"></i>
-            <span>হাদিস</span>
-        </button>
-        <button class="nav-item" onclick="openScreen('modal-tasbih')">
-            <i data-lucide="fingerprint"></i>
-            <span>তসবিহ</span>
-        </button>
-        <button class="nav-item" onclick="openScreen('modal-admin')">
-            <i data-lucide="shield-check"></i>
-            <span>অ্যাডমিন</span>
-        </button>
+    <nav class="royal-navbar">
+        <button class="nav-link" onclick="openModal('modal-quran')"><i data-lucide="book-open"></i><span>কুরআন</span></button>
+        <button class="nav-link" onclick="openModal('modal-hadith')"><i data-lucide="scroll"></i><span>হাদিস</span></button>
+        <button class="nav-link" onclick="openModal('modal-tasbih')"><i data-lucide="fingerprint"></i><span>তসবিহ</span></button>
+        <button class="nav-link" onclick="openModal('modal-admin')"><i data-lucide="shield-check"></i><span>অ্যাডমিন</span></button>
     </nav>
 
-    <!-- Modals -->
-    <div id="modal-hadith" class="modal">
-        <div class="modal-header">
-            <h2 style="font-family:'Cinzel Decorative'; color:var(--gold-dark);">সহীহ হাদিস বিশ্বকোষ</h2>
-            <button class="close-btn" onclick="closeScreen('modal-hadith')"><i data-lucide="x"></i></button>
+    <!-- Modal 1: Hadith -->
+    <div class="modal-screen" id="modal-hadith">
+        <div class="modal-head">
+            <div class="head-title">সহীহ হাদিস ভাণ্ডার</div>
+            <button onclick="closeModal('modal-hadith')" style="border:none; background:none;"><i data-lucide="x"></i></button>
         </div>
-        <div class="modal-body">
-            <div id="hadith-render"></div>
+        <div class="modal-scroll" id="hadith-render"></div>
+    </div>
+
+    <!-- Modal 2: Quran -->
+    <div class="modal-screen" id="modal-quran">
+        <div class="modal-head">
+            <div class="head-title">আল-কুরআন মাজীদ</div>
+            <button onclick="closeModal('modal-quran')" style="border:none; background:none;"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-scroll" id="quran-render"></div>
+    </div>
+
+    <!-- Modal 3: Tasbih -->
+    <div class="modal-screen" id="modal-tasbih">
+        <div class="modal-head">
+            <div class="head-title">ডিজিটাল তসবিহ</div>
+            <button onclick="closeModal('modal-tasbih')" style="border:none; background:none;"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-scroll" style="text-align:center;">
+            <div style="font-size:5rem; font-family:'Outfit'; color:var(--gold-dark); margin:40px 0;" id="t-count">0</div>
+            <button onclick="countT()" style="width:200px; height:200px; border-radius:50%; background:var(--gold-gradient); color:white; font-size:1.5rem; font-weight:700; border:6px solid white; box-shadow:0 10px 30px rgba(0,0,0,0.1);">জিকির করুন</button>
         </div>
     </div>
 
-    <div id="modal-quran" class="modal">
-        <div class="modal-header">
-            <h2 style="font-family:'Cinzel Decorative'; color:var(--gold-dark);">আল-কুরআন মাজীদ</h2>
-            <button class="close-btn" onclick="closeScreen('modal-quran')"><i data-lucide="x"></i></button>
+    <!-- Modal 4: Admin -->
+    <div class="modal-screen" id="modal-admin">
+        <div class="modal-head">
+            <div class="head-title">অ্যাডমিন কন্ট্রোল</div>
+            <button onclick="closeModal('modal-admin')" style="border:none; background:none;"><i data-lucide="x"></i></button>
         </div>
-        <div class="modal-body">
-            <div id="surah-list"></div>
-        </div>
-    </div>
-
-    <div id="modal-tasbih" class="modal">
-        <div class="modal-header">
-            <h2 style="font-family:'Cinzel Decorative'; color:var(--gold-dark);">তসবিহ কাউন্টার</h2>
-            <button class="close-btn" onclick="closeScreen('modal-tasbih')"><i data-lucide="x"></i></button>
-        </div>
-        <div class="modal-body" style="text-align:center;">
-            <div style="font-size:5rem; font-family:'Outfit'; color:var(--gold-dark); margin:50px 0;" id="t-count">0</div>
-            <button onclick="countT()" style="width:200px; height:200px; border-radius:50%; background:var(--gold-gradient); border:8px solid white; box-shadow:0 15px 40px rgba(0,0,0,0.1); color:white; font-size:1.5rem; font-weight:700;">জিকির করুন</button>
-            <br><button onclick="resetT()" style="margin-top:30px; background:none; border:1px solid var(--gold-border); padding:10px 20px; border-radius:20px; color:var(--gold-dark);">রিসেট</button>
-        </div>
-    </div>
-
-    <div id="modal-admin" class="modal">
-        <div class="modal-header">
-            <h2 style="font-family:'Cinzel Decorative'; color:var(--gold-dark);">অ্যাডমিন প্যানেল</h2>
-            <button class="close-btn" onclick="closeScreen('modal-admin')"><i data-lucide="x"></i></button>
-        </div>
-        <div class="modal-body">
-            <div id="admin-login-view" class="admin-box">
-                <i data-lucide="lock" style="width:50px; height:50px; color:var(--gold-primary); margin-bottom:20px;"></i>
-                <input type="password" id="admin-pin" class="pin-field" placeholder="••••" maxlength="4">
-                <button class="btn-gold" onclick="loginAdmin()">প্রবেশ করুন</button>
+        <div class="modal-scroll">
+            <div id="admin-login-ui" style="text-align:center; padding-top:50px;">
+                <input type="password" id="admin-pin" class="pin-mask-field" placeholder="••••" maxlength="4">
+                <button class="btn-royal-gold" onclick="loginAdmin()">প্রবেশ করুন</button>
             </div>
-            <div id="admin-dash-view" style="display:none;">
-                <div class="editor-grid" id="editor-container">
-                    <!-- Editor Inputs -->
-                </div>
-                <button class="btn-gold" style="margin-top:30px;" onclick="publishLive()">লাইভ পাবলিশ করুন</button>
+            <div id="admin-dash-ui" style="display:none;">
+                <div id="editor-grid"></div>
+                <button class="btn-royal-gold" style="margin-top:20px;" onclick="publishGlobal()">লাইভ পাবলিশ করুন</button>
             </div>
-        </div>
-    </div>
-
-    <div id="welcome-view" class="welcome-overlay">
-        <div class="welcome-card">
-            <h2 style="font-family:'Cinzel Decorative'; color:var(--gold-dark); margin-bottom:15px;">স্বাগতম নূর আল-মিযানে</h2>
-            <p style="color:var(--text-muted); line-height:1.6; margin-bottom:25px;">এটি একটি রিয়েল-টাইম সালাত ম্যানেজমেন্ট সিস্টেম। আপনি যদি অ্যাডমিন হন তবেই কেবল সময়সূচি পরিবর্তন করতে পারবেন।</p>
-            <button class="btn-gold" onclick="closeWelcome()">শুরু করুন</button>
         </div>
     </div>
 
     <script>
-        // --- Core Configuration ---
-        const CLOUD_API = 'https://api.npoint.io/46dfb4c2ebf928e08d13';
+        const MQTT_TOPIC = "noor_almizan_global_7860_v3";
+        let mqttClient;
         
-        let appData = {
-            jamat: [
-                { id: 1, name: 'ফজর', ar: 'الفجر', time: '--:-- --' },
-                { id: 2, name: 'যোহর', ar: 'الظهر', time: '--:-- --' },
-                { id: 3, name: 'আসর', ar: 'العصر', time: '--:-- --' },
-                { id: 4, name: 'মাগরিব', ar: 'المغرب', time: '--:-- --' },
-                { id: 5, name: 'এশা', ar: 'العشاء', time: '--:-- --' },
-                { id: 6, name: 'জুমুআ', ar: 'الجمعة', time: '--:-- --' }
-            ],
-            azan: [
-                { id: 1, name: 'ফজর', ar: 'الفجر', time: '--:-- --' },
-                { id: 2, name: 'যোহর', ar: 'الظهر', time: '--:-- --' },
-                { id: 3, name: 'আসর', ar: 'العصر', time: '--:-- --' },
-                { id: 4, name: 'মাগরিব', ar: 'المغرب', time: '--:-- --' },
-                { id: 5, name: 'এশা', ar: 'العشاء', time: '--:-- --' },
-                { id: 6, name: 'জুমুআ', ar: 'الجمعة', time: '--:-- --' }
-            ],
-            celestial: { sehri: '--:-- --', sunrise: '--:-- --', sunset: '--:-- --', iftar: '--:-- --' }
+        let appData = JSON.parse(localStorage.getItem('noor_v10')) || {
+            configured: false,
+            jamat: [{id:1, name:'ফজর', ar:'الفجر', time:'--:-- --'},{id:2, name:'যোহর', ar:'الظهر', time:'--:-- --'},{id:3, name:'আসর', ar:'العصر', time:'--:-- --'},{id:4, name:'মাগরিব', ar:'المغرب', time:'--:-- --'},{id:5, name:'এশা', ar:'العشاء', time:'--:-- --'},{id:6, name:'জুমুআ', ar:'الجمعة', time:'--:-- --'}],
+            azan: [{id:1, name:'ফজর', ar:'الفجر', time:'--:-- --'},{id:2, name:'যোহর', ar:'الظهر', time:'--:-- --'},{id:3, name:'আসর', ar:'العصر', time:'--:-- --'},{id:4, name:'মাগরিব', ar:'المغرب', time:'--:-- --'},{id:5, name:'এশা', ar:'العشاء', time:'--:-- --'},{id:6, name:'জুমুআ', ar:'الجمعة', time:'--:-- --'}],
+            celestial: {sehri:'--:-- --', sunrise:'--:-- --', sunset:'--:-- --', iftar:'--:-- --'}
         };
 
-        let currentMode = 'jamat';
+        let currentTab = 'jamat';
         let tasbihCount = 0;
 
-        // --- Audio Engine ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playTone(freq, duration) {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + duration);
-        }
-
-        // --- UI Rendering ---
-        function renderPrayers() {
-            const container = document.getElementById('prayer-list-container');
+        function renderUI() {
+            const container = document.getElementById('prayer-cards-container');
             container.innerHTML = '';
-            appData[currentMode].forEach(p => {
+            appData[currentTab].forEach(p => {
                 container.innerHTML += `
-                    <div class="prayer-card">
-                        <div class="p-info">
-                            <div class="p-serial">${p.id}</div>
-                            <div>
-                                <div class="p-name-bn">${p.name}</div>
-                                <div class="p-name-ar">${p.ar}</div>
-                            </div>
+                    <div class="prayer-item">
+                        <div class="item-left">
+                            <div class="serial-badge">${p.id}</div>
+                            <div class="item-titles"><span class="name-bn">${p.name}</span><span class="name-ar">${p.ar}</span></div>
                         </div>
-                        <div class="p-time">${p.time}</div>
+                        <div class="time-digits">${p.time}</div>
                     </div>
                 `;
             });
-            document.getElementById('hud-sehri').innerText = appData.celestial.sehri;
-            document.getElementById('hud-sunrise').innerText = appData.celestial.sunrise;
-            document.getElementById('hud-sunset').innerText = appData.celestial.sunset;
-            document.getElementById('hud-iftar').innerText = appData.celestial.iftar;
+            document.getElementById('val-sehri').innerText = appData.celestial.sehri;
+            document.getElementById('val-sunrise').innerText = appData.celestial.sunrise;
+            document.getElementById('val-sunset').innerText = appData.celestial.sunset;
+            document.getElementById('val-iftar').innerText = appData.celestial.iftar;
         }
 
-        function switchMode(mode, btn) {
-            playTone(600, 0.1);
-            currentMode = mode;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            renderPrayers();
+        function setPrayerMode(mode) {
+            currentTab = mode;
+            document.getElementById('tab-btn-jamat').classList.toggle('active', mode === 'jamat');
+            document.getElementById('tab-btn-azan').classList.toggle('active', mode === 'azan');
+            renderUI();
         }
 
-        // --- Hadith Data (Verified Sahih) ---
-        const HADITH_DB = [
-            { ar: "إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ", bn: "নিশ্চয়ই সকল আমল নিয়তের উপর নির্ভরশীল।", ref: "সহীহ বুখারী: ১" },
-            { ar: "الصَّلَاةُ نُورٌ", bn: "নামাজ হলো মুমিনের জন্য নূর বা আলো।", ref: "সহীহ মুসলিম: ২২৩" },
-            { ar: "الدُّنْيَا سِجْنُ الْمُؤْمِنِ وَجَنَّةُ الْكَافِرِ", bn: "দুনিয়া মুমিনের জন্য জেলখানা এবং কাফেরের জন্য জান্নাত।", ref: "সহীহ মুসলিম: ২৯৫৬" }
-        ];
+        // --- Real-Time Sync Engine ---
+        function initSync() {
+            const syncMsg = document.getElementById('sync-msg');
+            const cid = "noor_" + Math.random().toString(16).substr(2, 6);
+            mqttClient = new Paho.MQTT.Client("broker.hivemq.com", 8884, "/mqtt", cid);
 
-        function loadHadiths() {
-            const container = document.getElementById('hadith-render');
-            container.innerHTML = '';
-            HADITH_DB.forEach(h => {
-                container.innerHTML += `
-                    <div class="hadith-card">
-                        <div class="h-ar">${h.ar}</div>
-                        <div class="h-bn">${h.bn}</div>
-                        <div class="h-meta"><span>${h.ref}</span> <button style="color:var(--gold-dark); background:none; border:none;" onclick="copyH('${h.bn}')">কপি</button></div>
-                    </div>
-                `;
+            mqttClient.onMessageArrived = (msg) => {
+                const data = JSON.parse(msg.payloadString);
+                if(data.configured) {
+                    appData = data;
+                    localStorage.setItem('noor_v10', JSON.stringify(data));
+                    renderUI();
+                    syncMsg.innerText = "গ্লোবাল ক্লাউড সিঙ্ক: লাইভ আপডেট প্রাপ্ত";
+                }
+            };
+
+            mqttClient.connect({
+                useSSL: true, onSuccess: () => {
+                    syncMsg.innerText = "গ্লোবাল ক্লাউড সিঙ্ক: লাইভ সংযুক্ত";
+                    mqttClient.subscribe(MQTT_TOPIC);
+                }, onFailure: () => {
+                    syncMsg.innerText = "সিঙ্ক: লোকাল মোড সক্রিয়";
+                    setTimeout(initSync, 5000);
+                }
             });
         }
 
-        function copyH(txt) { navigator.clipboard.writeText(txt); alert('কপি হয়েছে!'); }
-
-        // --- Quran Logic ---
-        async function loadQuran() {
-            const box = document.getElementById('surah-list');
-            box.innerHTML = 'লোড হচ্ছে...';
-            try {
-                const res = await fetch('https://api.alquran.cloud/v1/surah');
-                const data = await res.json();
-                box.innerHTML = '';
-                data.data.forEach(s => {
-                    box.innerHTML += `
-                        <div class="prayer-card" style="cursor:pointer;">
-                            <div class="p-info">
-                                <div class="p-serial">${s.number}</div>
-                                <div><div class="p-name-bn">${s.englishName}</div><div class="p-name-ar">${s.name}</div></div>
-                            </div>
-                            <div style="font-size:0.8rem;">${s.numberOfAyahs} আয়াত</div>
-                        </div>
-                    `;
-                });
-            } catch(e) { box.innerHTML = 'ইন্টারনেট চেক করুন।'; }
-        }
-
-        // --- Admin Logic ---
         function loginAdmin() {
-            const pin = document.getElementById('admin-pin').value;
-            if(pin === "7860") {
-                playTone(800, 0.2);
-                document.getElementById('admin-login-view').style.display = 'none';
-                document.getElementById('admin-dash-view').style.display = 'block';
+            if(document.getElementById('admin-pin').value === "7860") {
+                document.getElementById('admin-login-ui').style.display = 'none';
+                document.getElementById('admin-dash-ui').style.display = 'block';
                 loadEditor();
-            } else {
-                playTone(200, 0.3);
-                alert('ভুল পিন!');
-            }
+            } else { alert("ভুল পিন!"); }
         }
 
         function loadEditor() {
-            const container = document.getElementById('editor-container');
-            container.innerHTML = '<h3>জামাত ও ওয়াক্ত এডিট</h3>';
-            
-            // Jamat Inputs
+            const grid = document.getElementById('editor-grid');
+            grid.innerHTML = '<h3>জামাত ও ওয়াক্ত এডিট</h3>';
             appData.jamat.forEach((p, i) => {
-                container.innerHTML += `<div class="input-group"><label>জামাত: ${p.name}</label><input type="text" id="ej-${i}" value="${p.time}"></div>`;
+                grid.innerHTML += `<div class="time-edit-row"><label>জামাত: ${p.name}</label><input type="text" id="ej-${i}" value="${p.time}"></div>`;
             });
-            // Azan Inputs
             appData.azan.forEach((p, i) => {
-                container.innerHTML += `<div class="input-group"><label>ওয়াক্ত: ${p.name}</label><input type="text" id="ea-${i}" value="${p.time}"></div>`;
+                grid.innerHTML += `<div class="time-edit-row"><label>আজান: ${p.name}</label><input type="text" id="ea-${i}" value="${p.time}"></div>`;
             });
-            // Celestial
-            container.innerHTML += `
-                <h3>আকাশমন্ডলীর সময়</h3>
-                <div class="input-group"><label>সাহরি</label><input type="text" id="ec-sehri" value="${appData.celestial.sehri}"></div>
-                <div class="input-group"><label>সূর্যোদয়</label><input type="text" id="ec-sunr" value="${appData.celestial.sunrise}"></div>
-                <div class="input-group"><label>সূর্যাস্ত</label><input type="text" id="ec-suns" value="${appData.celestial.sunset}"></div>
-                <div class="input-group"><label>ইফতার</label><input type="text" id="ec-iftar" value="${appData.celestial.iftar}"></div>
-            `;
         }
 
-        async function publishLive() {
-            // Collect Data
+        function publishGlobal() {
+            appData.configured = true;
             appData.jamat.forEach((p, i) => p.time = document.getElementById(`ej-${i}`).value);
             appData.azan.forEach((p, i) => p.time = document.getElementById(`ea-${i}`).value);
-            appData.celestial.sehri = document.getElementById('ec-sehri').value;
-            appData.celestial.sunrise = document.getElementById('ec-sunr').value;
-            appData.celestial.sunset = document.getElementById('ec-suns').value;
-            appData.celestial.iftar = document.getElementById('ec-iftar').value;
+            
+            const msg = new Paho.MQTT.Message(JSON.stringify(appData));
+            msg.destinationName = MQTT_TOPIC;
+            msg.retained = true;
+            mqttClient.send(msg);
+            alert("বিশ্বব্যাপী লাইভ পাবলিশ হয়েছে!");
+        }
 
-            try {
-                await fetch(CLOUD_API, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(appData)
+        // --- Features ---
+        const HADITH_DB = [
+            {ar: "إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ", bn: "সকল আমল নিয়তের উপর নির্ভরশীল।", ref: "বুখারী: ১"},
+            {ar: "الصَّلَاةُ نُورٌ", bn: "সালাত হলো মুমিনের নূর বা আলো।", ref: "মুসলিম: ২২৩"}
+        ];
+
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+            if(id === 'modal-hadith') {
+                const render = document.getElementById('hadith-render');
+                render.innerHTML = '';
+                HADITH_DB.forEach(h => {
+                    render.innerHTML += `<div class="hadith-card"><div class="h-matn-ar">${h.ar}</div><div class="h-trans-bn">${h.bn}</div><div style="font-size:0.8rem; color:var(--gold-dark);">${h.ref}</div></div>`;
                 });
-                renderPrayers();
-                alert('সফলভাবে গ্লোবাল আপডেট হয়েছে!');
-            } catch(e) {
-                alert('সার্ভার ত্রুটি! ইন্টারনেটে সমস্যা হতে পারে।');
             }
-        }
-
-        // --- Sync Heartbeat ---
-        async function syncData() {
-            try {
-                const res = await fetch(CLOUD_API);
-                const data = await res.json();
-                if(data && data.jamat) {
-                    appData = data;
-                    renderPrayers();
-                }
-            } catch(e) {}
-        }
-
-        // --- System Functions ---
-        function openScreen(id) { 
-            playTone(900, 0.05);
-            document.getElementById(id).style.display = 'flex'; 
-            if(id === 'modal-hadith') loadHadiths();
             if(id === 'modal-quran') loadQuran();
         }
-        function closeScreen(id) { document.getElementById(id).style.display = 'none'; }
-        function closeWelcome() { document.getElementById('welcome-view').style.display = 'none'; playTone(1000, 0.1); }
-        
-        function countT() { tasbihCount++; document.getElementById('t-count').innerText = tasbihCount; playTone(1200, 0.05); if(tasbihCount % 33 === 0) navigator.vibrate(100); }
-        function resetT() { tasbihCount = 0; document.getElementById('t-count').innerText = 0; }
 
-        function updateTime() {
-            const now = new Date();
-            document.getElementById('hero-time').innerText = now.toLocaleTimeString('en-US', {hour12:true, hour:'2-digit', minute:'2-digit', second:'2-digit'});
-            document.getElementById('hero-date').innerText = now.toLocaleDateString('bn-BD', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+        async function loadQuran() {
+            const render = document.getElementById('quran-render');
+            render.innerHTML = 'লোড হচ্ছে...';
+            try {
+                const res = await fetch('https://api.alquran.cloud/v1/surah');
+                const data = await res.json();
+                render.innerHTML = '';
+                data.data.forEach(s => {
+                    render.innerHTML += `<div class="prayer-item"><div>${s.number}. ${s.englishName}</div><div class="name-ar">${s.name}</div></div>`;
+                });
+            } catch(e) { render.innerHTML = 'ইন্টারনেট চেক করুন।'; }
         }
 
-        // Background Animation
-        const canvas = document.getElementById('bg-canvas');
-        const ctx = canvas.getContext('2d');
-        function drawBg() {
-            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            ctx.clearRect(0,0,canvas.width, canvas.height);
-            ctx.fillStyle = 'rgba(197, 160, 89, 0.03)';
-            for(let i=0; i<30; i++) {
-                ctx.beginPath();
-                ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*5, 0, Math.PI*2);
-                ctx.fill();
-            }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function countT() { tasbihCount++; document.getElementById('t-count').innerText = tasbihCount; if(tasbihCount % 33 === 0) navigator.vibrate(100); }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('time-hero').innerText = now.toLocaleTimeString('en-US', {hour12:true, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+            document.getElementById('date-hero').innerText = now.toLocaleDateString('bn-BD', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
         }
 
         // --- Init ---
-        setInterval(updateTime, 1000);
-        setInterval(syncData, 5000); // Sync with cloud every 5 seconds
-        drawBg();
-        syncData();
-        renderPrayers();
-        lucide.createIcons();
+        window.onload = () => {
+            initSync();
+            renderUI();
+            setInterval(updateClock, 1000);
+            lucide.createIcons();
+            
+            // Canvas Particles
+            const cvs = document.getElementById('heaven-canvas');
+            const ctx = cvs.getContext('2d');
+            cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+            function animate() {
+                ctx.clearRect(0,0,cvs.width, cvs.height);
+                ctx.fillStyle = 'rgba(197, 160, 89, 0.1)';
+                for(let i=0; i<20; i++) {
+                    ctx.beginPath();
+                    ctx.arc(Math.random()*cvs.width, Math.random()*cvs.height, 2, 0, Math.PI*2);
+                    ctx.fill();
+                }
+                requestAnimationFrame(animate);
+            }
+            animate();
+        };
     </script>
 </body>
-        </html>
+</html>
